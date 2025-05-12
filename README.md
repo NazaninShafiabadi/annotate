@@ -1,4 +1,4 @@
-# Sentence Annotation Tool
+# Statement Annotation Tool
 
 ## Annotation Process
 One sentence will be displayed at a time.
@@ -10,23 +10,13 @@ If the transformation is not acceptable, you should suggest a better alternative
 Once your response is submitted, the next sentence will be displayed.
 
 ## Usage
+Install Streamlit:
+```
+pip install streamlit
+```
 Run the tool using Streamlit:
 ```
 streamlit run annotate.py -- \
 --input_file "fr_sample.csv" \
 --output_file "fr_sample_annotated.csv"
-```
-
-## Dependencies
-This tool requires:
-- **pandas**
-- **streamlit**
-
-Install them using:
-```
-pip install pandas streamlit
-```
-or
-```
-pip install -r requirements.txt
 ```
