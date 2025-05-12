@@ -1,13 +1,3 @@
-"""
-Usage:
-    python -m streamlit run annotate.py --input_file <input_file> --output_file <output_file>
-    
-Example:
-streamlit run src/annotate.py -- \
---input_file "data/fr_sample.csv" \
---output_file "data/fr_sample_annotated.csv"
-"""
-
 import argparse
 import streamlit as st
 import pandas as pd
@@ -21,7 +11,10 @@ def create_parser():
 
 
 def load_data(file_path):
-    # Load the data from the CSV file
+    if not file_path.ends_with(".csv"):
+        raise ValueError("Input file must be a CSV file.")
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Input file {file_path} does not exist.")
     df = pd.read_csv(file_path)
     return df
 
@@ -52,10 +45,8 @@ def annotate(args):
         st.write(f"**Stance:** {row['label']}")
         st.write(f"**Transformed:** {row['transformation']}")
 
-        # User selects whether the transformation is acceptable
         acceptability = st.radio(f"Does the transformation reflect the opposite stance?", ["Yes", "No"], key=f"radio_{index}")
 
-        # If not acceptable, allow user to suggest an alternative
         suggestion = None
         if acceptability == "No":
             suggestion = st.text_area(f"Suggest a better transformation:", key=f"suggestion_{index}")
@@ -64,7 +55,6 @@ def annotate(args):
             df.at[index, "acceptable"] = acceptability
             df.at[index, "suggestion"] = suggestion
 
-            # Move to the next sentence
             st.session_state.index += 1
             st.rerun()
 
