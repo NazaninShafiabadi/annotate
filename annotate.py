@@ -12,7 +12,7 @@ def create_parser():
 
 
 def load_data(file_path):
-    if not file_path.ends_with(".csv"):
+    if not file_path.endswith(".csv"):
         raise ValueError("Input file must be a CSV file.")
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Input file {file_path} does not exist.")
