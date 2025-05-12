@@ -16,3 +16,17 @@ streamlit run annotate.py -- \
 --input_file "fr_sample.csv" \
 --output_file "fr_sample_annotated.csv"
 ```
+
+## Dependencies
+This tool requires:
+- **pandas**
+- **streamlit**
+
+Install them using:
+```
+pip install pandas streamlit
+```
+or
+```
+pip install -r requirements.txt
+```
