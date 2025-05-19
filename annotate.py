@@ -83,7 +83,6 @@ def annotate(args):
         boxed_markdown(row["transformation"])
 
         # Annotation input
-        # acceptable = st.radio(f"**Does the transformation reflect the opposite stance?**", ["Yes", "No"], key=f"radio_{index}")
         st.markdown(
             """
             <div style='margin-top:25px; margin-bottom:-30px'>
