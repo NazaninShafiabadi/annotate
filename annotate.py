@@ -1,7 +1,8 @@
 import os
 import argparse
-import streamlit as st
 import pandas as pd
+from pathlib import Path
+import streamlit as st
 
 
 def create_parser():
@@ -29,6 +30,9 @@ def annotate(args):
     if "index" not in st.session_state:
         st.session_state.index = 0
 
+    output_path = Path(args.output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
     df = st.session_state.df
     if "acceptable" not in df.columns:
         df["acceptable"] = None 
@@ -46,29 +50,34 @@ def annotate(args):
         st.write(f"**Stance:** {row['label']}")
         st.write(f"**Transformed:** {row['transformation']}")
 
-        acceptability = st.radio(f"Does the transformation reflect the opposite stance?", ["Yes", "No"], key=f"radio_{index}")
+        acceptable = st.radio(f"Does the transformation reflect the opposite stance?", ["Yes", "No"], key=f"radio_{index}")
 
         suggestion = None
-        if acceptability == "No":
-            suggestion = st.text_area(f"Suggest a better transformation:", key=f"suggestion_{index}")
+        if acceptable == "No":
+            suggestion = st.text_area(f"Provide a minimal transformation of the original statement that would reflect the opposite stance toward the given target:", 
+                                      key=f"suggestion_{index}")
 
         if st.button("Submit Response"):
-            df.at[index, "acceptable"] = acceptability
+            df.at[index, "acceptable"] = acceptable
             df.at[index, "suggestion"] = suggestion
+            df.to_csv(output_path, index=False)
 
             st.session_state.index += 1
             st.rerun()
 
     else:
-        st.success("Annotation complete! You can now save your responses.")
-
-    if st.session_state.index >= len(df) and st.button("Save Annotations"):
-        df.to_csv(args.output_file, index=False)
-        st.success("Annotations saved successfully!")
+        # st.success("Annotation complete! Thank you for your participation.")
+        uploaded_file = st.file_uploader("Annotation complete! Please upload your annotated file here:")
+        if uploaded_file:
+            upload_path = Path("uploads") / uploaded_file.name
+            upload_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(upload_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            st.success("✅ File received! Thank you for your participation.")
 
 
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    st.set_page_config(page_title="Sentence Annotation Tool", layout="wide")
+    st.set_page_config(page_title="Statement Annotation Tool", layout="wide")
     annotate(args)
