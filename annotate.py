@@ -21,12 +21,21 @@ def load_data(file_path):
     return df
 
 
+def boxed_markdown(content):
+    st.markdown(f"""
+    <div style="background-color:#f9f9f9; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 20px;">
+        {content}
+    </div>
+    """, unsafe_allow_html=True)
+
+
 def annotate(args):
+    st.set_page_config(page_title="Statement Annotation Tool", layout="wide")
+
     # Load data into session state
     if "df" not in st.session_state:
         st.session_state.df = load_data(args.input_file)
 
-    # Track the current sentence index
     if "index" not in st.session_state:
         st.session_state.index = 0
 
@@ -39,25 +48,64 @@ def annotate(args):
     if "suggestion" not in df.columns:
         df["suggestion"] = None
 
-    # Display one sentence at a time
+    # Sidebar instructions
+    st.sidebar.title("Task Instructions")
+    st.sidebar.markdown("""
+    - One statement will be displayed at a time.
+    - Mark whether the transformation correctly reflects the **opposite stance**.
+    - If not, suggest a better alternative.
+    - Submit your response to save and move to the next statement.
+    
+    You can upload your annotated file at the end of the task. \n
+    If you have any questions, please contact the administrator.
+    """)
+
+    # Main interface
     index = st.session_state.index
     if index < len(df):
         row = df.iloc[index]
 
-        st.subheader(f"Sentence {index + 1}")
-        st.write(f"**Target:** {row['target']}")
-        st.write(f"**Original:** {row['comment']}")
-        st.write(f"**Stance:** {row['label']}")
-        st.write(f"**Transformed:** {row['transformation']}")
+        st.title("📚 Statement Annotation Tool")
+        st.markdown(f"#### 🔢 {index + 1} / {len(df)}")
+        st.progress((index + 1) / len(df))
 
-        acceptable = st.radio(f"Does the transformation reflect the opposite stance?", ["Yes", "No"], key=f"radio_{index}")
+        # Statement info
+        st.markdown("#### 🎯 Target Question")
+        boxed_markdown(row["target"])
+
+        st.markdown("#### 💬 Original Statement")
+        boxed_markdown(row["comment"])
+
+        st.markdown("#### ⚖️ Original Stance")
+        boxed_markdown(row["label"])
+
+        st.markdown("#### 🔁 Transformed Statement")
+        boxed_markdown(row["transformation"])
+
+        # Annotation input
+        # acceptable = st.radio(f"**Does the transformation reflect the opposite stance?**", ["Yes", "No"], key=f"radio_{index}")
+        st.markdown(
+            """
+            <div style='margin-top:25px; margin-bottom:-30px'>
+                <span style='font-size:18px; font-weight:600'>
+                    Does the transformed statement minimally alter the original while accurately expressing the opposite stance?
+                </span>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        acceptable = st.radio("", ["Yes", "No"], key=f"radio_{index}")
 
         suggestion = None
         if acceptable == "No":
-            suggestion = st.text_area(f"Provide a minimal transformation of the original statement that would reflect the opposite stance toward the given target:", 
-                                      key=f"suggestion_{index}")
+            with st.expander("✏️ Suggest a better transformation"):
+                suggestion = st.text_area(
+                    "Provide a minimal transformation of the original statement that would reflect the opposite stance toward the target:", 
+                    key=f"suggestion_{index}")
 
-        if st.button("Submit Response"):
+        # Submit button
+        col_submit, _ = st.columns([1, 4])
+        if col_submit.button("Submit Response"):
             df.at[index, "acceptable"] = acceptable
             df.at[index, "suggestion"] = suggestion
             df.to_csv(output_path, index=False)
@@ -66,8 +114,8 @@ def annotate(args):
             st.rerun()
 
     else:
-        # st.success("Annotation complete! Thank you for your participation.")
-        uploaded_file = st.file_uploader("Annotation complete! Please upload your annotated file here:")
+        st.title("🎉 Annotation Complete!")
+        uploaded_file = st.file_uploader("📁 Please upload your annotated file here:")
         if uploaded_file:
             upload_path = Path("uploads") / uploaded_file.name
             upload_path.parent.mkdir(parents=True, exist_ok=True)
@@ -79,5 +127,4 @@ def annotate(args):
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    st.set_page_config(page_title="Statement Annotation Tool", layout="wide")
     annotate(args)
