@@ -47,6 +47,8 @@ def annotate(args):
         df["acceptable"] = None 
     if "suggestion" not in df.columns:
         df["suggestion"] = None
+    if "easy" not in df.columns:
+        df["easy"] = None
 
     # Sidebar instructions
     st.sidebar.title("Task Instructions")
@@ -93,7 +95,7 @@ def annotate(args):
             """,
             unsafe_allow_html=True
         )
-        acceptable = st.radio("", ["Yes", "No"], key=f"radio_{index}")
+        acceptable = st.radio("", ["Yes", "No"], key=f"acceptable_{index}")
 
         suggestion = None
         if acceptable == "No":
@@ -101,12 +103,15 @@ def annotate(args):
                 suggestion = st.text_area(
                     "Provide a minimal transformation of the original statement that would reflect the opposite stance toward the target:", 
                     key=f"suggestion_{index}")
+                
+                easy = st.radio("Was the transformation easy to perform?", ["Yes", "No"], key=f"easy_{index}")
 
         # Submit button
         col_submit, _ = st.columns([1, 4])
         if col_submit.button("Submit Response"):
             df.at[index, "acceptable"] = acceptable
             df.at[index, "suggestion"] = suggestion
+            df.at[index, "easy"] = easy
             df.to_csv(output_path, index=False)
 
             st.session_state.index += 1
