@@ -105,6 +105,8 @@ def annotate(args):
                     key=f"suggestion_{index}")
                 
                 easy = st.radio("Was the transformation easy to perform?", ["Yes", "No"], key=f"easy_{index}")
+        else:
+            easy = None
 
         # Submit button
         col_submit, _ = st.columns([1, 4])
