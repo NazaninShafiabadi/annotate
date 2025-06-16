@@ -7,7 +7,7 @@ The final verified transformations are saved to a specified output file.
 Usage:
 python verify.py --input_file <path_to_annotated_csv> --output_file <path_to_save_verified_transformations>
 streamlit run verify.py -- \
---input_file "uploads/0_annoated.csv" \
+--input_file "uploads/0_annotated.csv" \
 --output_file "verified_annotations/0_verified.csv"
 """
 
