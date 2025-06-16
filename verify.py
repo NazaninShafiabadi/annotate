@@ -7,8 +7,8 @@ The final verified transformations are saved to a specified output file.
 Usage:
 python verify.py --input_file <path_to_annotated_csv> --output_file <path_to_save_verified_transformations>
 streamlit run verify.py -- \
---input_file "uploads/0_annotated.csv" \
---output_file "verified_annotations/0_verified.csv"
+--input_file "uploads/<num>_annotated.csv" \
+--output_file "verified_annotations/<num>_verified.csv"
 """
 
 import os
@@ -52,15 +52,17 @@ def verify(args):
     if "index" not in st.session_state:
         st.session_state.index = 0
 
+    # Prepare final df
+    if "out_df" not in st.session_state:
+        columns_to_keep = ['id', 'target', 'comment', 'label', 'language', 'dataset']
+        st.session_state.out_df = st.session_state.df[columns_to_keep].copy()
+        st.session_state.out_df['transformation'] = None
+
     output_path = Path(args.output_file)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     df = st.session_state.df
-
-    # Prepare final df
-    columns_to_keep = ['id', 'target', 'comment', 'label', 'language', 'dataset']
-    out_df = df[columns_to_keep].copy()
-    out_df['transformation'] = None
+    out_df = st.session_state.out_df
 
     # Main interface
     index = st.session_state.index
@@ -88,32 +90,48 @@ def verify(args):
         boxed_markdown(row["suggestion"])
 
         # Action input
-        transformation = None
-        st.markdown("Which transformation do you want to keep?")
-        cols = st.columns([0.35, 0.4, 2])
-        with cols[0]:
-            if st.button("Model"):
-                transformation = row["transformation"]
+        st.markdown("Do you want to keep this example?")
+        keep = st.radio(
+            "Do you want to keep this example?",
+            ["No", "Yes"],
+            key=f"keep_{index}",
+            label_visibility="collapsed"
+        )
 
-        with cols[1]:
-            if st.button("Annotator"):
-                transformation = row["suggestion"]
+        if keep == "Yes":
+            st.markdown("Which transformation do you want to keep?")
+            transformation_choice = st.radio(
+                "Select transformation source:",
+                ["Model", "Annotator", "Neither"],
+                key=f"choice_{index}",
+                label_visibility="collapsed"
+            )
 
-        with cols[2]:
-            if st.button("Neither"):
+            suggestion = ""
+            if transformation_choice == "Neither":
                 with st.expander("✏️ Suggest a better transformation"):
-                    transformation = st.text_area("", key=f"transformation_{index}")
-                
-        keep = st.radio("Do you want to keep this example?", ["Yes", "No"], key=f"keep_{index}")
+                    suggestion = st.text_area(
+                        "Type your suggested transformation below.", 
+                        label_visibility="collapsed", 
+                        key=f"suggestion_{index}"
+                    )
 
-
-        # Submit button
-        col_submit, _ = st.columns([1, 4])
-        if col_submit.button("Submit Response"):
+        if st.button("Submit Response", key=f"submit_{index}"):
             if keep == "Yes":
-                out_df.at[index, "transformation"] = transformation
-                out_df.to_csv(output_path, index=False)
+                if transformation_choice == "Model":
+                    transformation = row["transformation"]
+                elif transformation_choice == "Annotator":
+                    transformation = row["suggestion"]
+                elif transformation_choice == "Neither":
+                    transformation = suggestion
+                else:
+                    transformation = None
 
+                out_df.at[index, "transformation"] = transformation
+            else:
+                out_df.drop(index, inplace=True)
+            
+            out_df.to_csv(output_path, index=False)
             st.session_state.index += 1
             st.rerun()
 
