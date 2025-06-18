@@ -89,6 +89,12 @@ def verify(args):
         st.markdown("#### 💁🏻 Annotator Suggestion")
         boxed_markdown(row["suggestion"])
 
+        difficulty = (
+            "Not specified" if pd.isna(row["easy"])
+            else row["easy"].replace("Yes", "Low").replace("No", "High")
+        )
+        st.markdown(f"#### 🛠️ Difficulty Level: {difficulty}")
+
         # Action input
         st.markdown("Do you want to keep this example?")
         keep = st.radio(
