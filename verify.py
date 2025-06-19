@@ -90,7 +90,7 @@ def verify(args):
         boxed_markdown(row["suggestion"])
 
         difficulty = (
-            "Not specified" if pd.isna(row["easy"])
+            "Not specified" if "easy" not in row or pd.isna(row["easy"])
             else row["easy"].replace("Yes", "Low").replace("No", "High")
         )
         st.markdown(f"#### 🛠️ Difficulty Level: {difficulty}")
@@ -143,13 +143,6 @@ def verify(args):
 
     else:
         st.title("🎉 Verification Complete!")
-        # uploaded_file = st.file_uploader("📁 Upload the verified file here:")
-        # if uploaded_file:
-        #     upload_path = Path("verified_annotations") / uploaded_file.name
-        #     upload_path.parent.mkdir(parents=True, exist_ok=True)
-        #     with open(upload_path, "wb") as f:
-        #         f.write(uploaded_file.getbuffer())
-        #     st.success("✅ File saved.")
 
 
 if __name__ == "__main__":
