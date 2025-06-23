@@ -95,7 +95,11 @@ def annotate(args):
             """,
             unsafe_allow_html=True
         )
-        acceptable = st.radio("", ["Yes", "No"], key=f"acceptable_{index}")
+        acceptable = st.radio("Is the transformation acceptable?", 
+                              ["Yes", "No"], 
+                              label_visibility="hidden", 
+                              key=f"acceptable_{index}"
+                              )
 
         suggestion = None
         if acceptable == "No":
